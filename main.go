@@ -86,12 +86,13 @@ func main() {
 	router := httprouter.New()
 
 	// routes init
-	router.GET("/igcinfo/api", handlerAPI)
+	router.GET("/paragliding", handlerRedir)
+	router.GET("/paragliding/api", handlerAPI)
 	router.GET("/igcinfo/api/igc", handlerIGC)
 	router.GET("/igcinfo/api/igc/:id", handlerID)
 	router.POST("/igcinfo/api/igc", handlerIGC)
 	router.GET("/igcinfo/api/igc/:id/:field", handlerField)
 
 	// server init
-	http.ListenAndServe(getPort(), router)
+	http.ListenAndServe(":8080", router)
 }

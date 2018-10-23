@@ -9,11 +9,16 @@ import (
 	"time"
 )
 
+func handlerRedir(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	newPath := r.URL.Path + "/api"
+	http.Redirect(w, r, newPath, http.StatusPermanentRedirect)
+}
+
 // handler for igcinfo/api
 func handlerAPI(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	http.Header.Add(w.Header(), "content-type", "application/json")
 
-	info := apiInfo{uptime(), "Service for IGC tracks.", "v1"}
+	info := apiInfo{uptime(), "Service for Paragliding tracks.", "v1"}
 
 	jsresp, err := json.Marshal(info)
 	if err != nil {
