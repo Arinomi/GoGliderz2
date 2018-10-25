@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"github.com/marni/goigc"
 	"net/http"
@@ -11,8 +10,9 @@ import (
 
 // global variable init
 var startTime = time.Now().Truncate(time.Second) // starting time
-var trackMAP = make(map[int]trackInfo)           // map of trackInfo structs
-var ids = make([]int, 0)                         // array of ids
+
+// database init
+var db = tracksMongoDB{"mongodb://user:password123@ds141783.mlab.com:41783/tracks", "tracks", "tracks"}
 
 // struct init
 type apiInfo struct {
@@ -21,12 +21,15 @@ type apiInfo struct {
 	Version string `json:"version"`
 }
 
-type trackInfo struct {
-	Date     time.Time `json:"date"`
-	Pilot    string    `json:"pilot"`
-	Glider   string    `json:"glider"`
-	GliderID string    `json:"glider_id"`
-	Distance float64   `json:"distance"`
+type Track struct {
+	Timestamp time.Time `json:"timestamp"`
+	TrackId   string    `json:"track_id"`
+	Date      time.Time `json:"date"`
+	Pilot     string    `json:"pilot"`
+	Glider    string    `json:"glider"`
+	GliderID  string    `json:"glider_id"`
+	Distance  float64   `json:"distance"`
+	SrcUrl    string    `json:"track_src_url"`
 }
 
 // returning uptime as a string in ISO 8601/RFC3339 format
@@ -51,27 +54,6 @@ func distance(p igc.Track) float64 {
 	return d
 }
 
-// creates a new track from the presented url and returns its ID
-// returns 0 if the url was invalid
-func newTrack(url string) int {
-	newTrack, err := igc.ParseLocation(url)
-	if err != nil {
-		fmt.Println(err)
-		return 0
-	}
-
-	track := trackInfo{
-		newTrack.Date,
-		newTrack.Pilot,
-		newTrack.GliderType,
-		newTrack.GliderID,
-		distance(newTrack)}
-
-	trackMAP[len(trackMAP)+1] = track
-	ids = append(ids, len(ids)+1)
-	return len(ids)
-}
-
 func getPort() string {
 	p := os.Getenv("PORT")
 	if p != "" {
@@ -85,13 +67,13 @@ func main() {
 	// router init
 	router := httprouter.New()
 
+	db.Init()
+
 	// routes init
 	router.GET("/paragliding", handlerRedir)
 	router.GET("/paragliding/api", handlerAPI)
-	router.GET("/igcinfo/api/igc", handlerIGC)
-	router.GET("/igcinfo/api/igc/:id", handlerID)
-	router.POST("/igcinfo/api/igc", handlerIGC)
-	router.GET("/igcinfo/api/igc/:id/:field", handlerField)
+	router.GET("/paragliding/api/track", handlerTrack)
+	router.POST("/paragliding/api/track", handlerTrack)
 
 	// server init
 	http.ListenAndServe(":8080", router)
