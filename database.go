@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 )
 
 // StudentsMongoDB stores the details of the DB connection.
@@ -78,22 +78,24 @@ func (db *tracksMongoDB) Count() int {
 /*
 Get returns a student with a given ID or empty student struct.
 */
-func (db *tracksMongoDB) Get(keyID string) (Track, bool) {
+func (db *tracksMongoDB) GetSelect(keyID string, fields bson.M) (map[string]interface{}, bool) {
 	session, err := mgo.Dial(db.DatabaseURL)
+	collection := session.DB(db.DatabaseName).C(db.TracksCollectionName)
 	if err != nil {
 		panic(err)
 	}
 	defer session.Close()
 
-	student := Track{}
 	ok := true
 
-	err = session.DB(db.DatabaseName).C(db.TracksCollectionName).Find(bson.M{"track_id": keyID}).One(&student)
+	result := make(map[string]interface{})
+
+	err = collection.Find(bson.M{"track_id": keyID}).Select(fields).One(&result)
 	if err != nil {
 		ok = false
 	}
 
-	return student, ok
+	return result, ok
 }
 
 /*

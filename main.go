@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/globalsign/mgo/bson"
 	"github.com/julienschmidt/httprouter"
 	"github.com/marni/goigc"
 	"net/http"
@@ -22,14 +23,14 @@ type apiInfo struct {
 }
 
 type Track struct {
-	Timestamp time.Time `json:"timestamp"`
-	TrackId   string    `json:"track_id"`
-	Date      time.Time `json:"date"`
-	Pilot     string    `json:"pilot"`
-	Glider    string    `json:"glider"`
-	GliderID  string    `json:"glider_id"`
-	Distance  float64   `json:"distance"`
-	SrcUrl    string    `json:"track_src_url"`
+	Timestamp time.Time `bson:"timestamp"`
+	TrackId   string    `bson:"track_id"`
+	Date      time.Time `bson:"H_date"`
+	Pilot     string    `bson:"pilot"`
+	Glider    string    `bson:"glider"`
+	GliderID  string    `bson:"glider_id"`
+	Distance  float64   `bson:"track_length"`
+	SrcUrl    string    `bson:"track_src_url"`
 }
 
 // returning uptime as a string in ISO 8601/RFC3339 format
@@ -54,6 +55,17 @@ func distance(p igc.Track) float64 {
 	return d
 }
 
+// generating a bson.M selection
+func sel(q ...string) (r bson.M) {
+	r = make(bson.M, len(q))
+	r["_id"] = 0
+	for _, s := range q {
+		r[s] = 1
+	}
+	return
+}
+
+// getting the appropriate port for Heroku
 func getPort() string {
 	p := os.Getenv("PORT")
 	if p != "" {
@@ -74,6 +86,8 @@ func main() {
 	router.GET("/paragliding/api", handlerAPI)
 	router.GET("/paragliding/api/track", handlerTrack)
 	router.POST("/paragliding/api/track", handlerTrack)
+	router.GET("/paragliding/api/track/:id", handlerTrackID)
+	router.GET("/paragliding/api/track/:id/:field", handlerTrackField)
 
 	// server init
 	http.ListenAndServe(":8080", router)
