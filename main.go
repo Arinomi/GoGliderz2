@@ -88,6 +88,11 @@ func main() {
 	router.POST("/paragliding/api/track", handlerTrack)
 	router.GET("/paragliding/api/track/:id", handlerTrackID)
 	router.GET("/paragliding/api/track/:id/:field", handlerTrackField)
+	router.GET("/paragliding/api/ticker/", handlerTicker)
+	//router.GET("/paragliding/api/ticker/latest/", handlerTickerLatest)
+	// apparently, the httprouter does not handle having both constants and wildcards in the same
+	// tree. Thus, I have put a simple if statment in handlerTickerTimestamps()
+	router.GET("/paragliding/api/ticker/:time/", handlerTickerTimestamps)
 
 	// server init
 	http.ListenAndServe(":8080", router)

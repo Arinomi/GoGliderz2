@@ -98,6 +98,26 @@ func (db *tracksMongoDB) GetSelect(keyID string, fields bson.M) (map[string]inte
 	return result, ok
 }
 
+func (db *tracksMongoDB) Get(query bson.M) (Track, bool) {
+	session, err := mgo.Dial(db.DatabaseURL)
+	collection := session.DB(db.DatabaseName).C(db.TracksCollectionName)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	ok := true
+
+	var result Track
+
+	err = collection.Find(query).One(&result)
+	if err != nil {
+		ok = false
+	}
+
+	return result, ok
+}
+
 /*
 GetAll returns a slice with all the students.
 */
@@ -110,7 +130,33 @@ func (db *tracksMongoDB) GetAll() []Track {
 
 	var all []Track
 
-	err = session.DB(db.DatabaseName).C(db.TracksCollectionName).Find(bson.M{}).All(&all)
+	err = session.
+		DB(db.DatabaseName).
+		C(db.TracksCollectionName).
+		Find(bson.M{}).
+		All(&all)
+	if err != nil {
+		return []Track{}
+	}
+
+	return all
+}
+
+func (db *tracksMongoDB) GetAllSorted(field string) []Track {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	var all []Track
+
+	err = session.
+		DB(db.DatabaseName).
+		C(db.TracksCollectionName).
+		Find(bson.M{}).
+		Sort(field).
+		All(&all)
 	if err != nil {
 		return []Track{}
 	}

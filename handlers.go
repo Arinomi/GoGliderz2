@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/globalsign/mgo/bson"
 	"github.com/julienschmidt/httprouter"
 	"github.com/marni/goigc"
 	"net/http"
@@ -133,5 +134,61 @@ func handlerTrackField(w http.ResponseWriter, _ *http.Request, ps httprouter.Par
 		}
 	} else {
 		http.Error(w, "Retrieving the track returned an error", http.StatusInternalServerError)
+	}
+}
+
+func handlerTicker(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+	http.Header.Add(w.Header(), "content-type", "application/json")
+
+	ticker, ok := returnTicker()
+	if !ok {
+		http.Error(w, "No tracks found", http.StatusNotFound)
+	} else {
+		jsresp, err := json.Marshal(ticker)
+		if err != nil {
+			http.Error(w, "Error parsing the Ticker", http.StatusInternalServerError)
+		}
+		w.Write(jsresp)
+	}
+}
+
+func handlerTickerTimestamps(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
+	http.Header.Add(w.Header(), "content-type", "application/json")
+	input := ps[0].Value
+
+	if input == "latest" {
+		timestamps := returnTimestamps(time.Time{})
+		latest := timestamps.latest
+
+		if latest.IsZero() {
+			http.Error(w, "No records found", http.StatusBadRequest)
+		} else {
+			query := bson.M{"timestamp": latest}
+			track, ok := db.Get(query)
+			if ok {
+				jsresp, err := json.Marshal(track.Timestamp)
+				if err != nil {
+					http.Error(w, "Error parsing timestamp", http.StatusInternalServerError)
+				}
+				w.Write(jsresp)
+			}
+		}
+	} else {
+		time, err := time.Parse(time.RFC3339, input) // Check if the timestamp provided is a valid time
+		if err != nil {
+			http.Error(w, "Invalid time format, use DD.MM.YYYY HH:MM:SS", http.StatusBadRequest)
+			return
+		}
+
+		ticker, ok := returnTickerTimestamp(time)
+		if !ok {
+			http.Error(w, "No tracks found", http.StatusNotFound)
+		} else {
+			jsresp, err := json.Marshal(ticker)
+			if err != nil {
+				http.Error(w, "Error parsing the Ticker", http.StatusInternalServerError)
+			}
+			w.Write(jsresp)
+		}
 	}
 }
