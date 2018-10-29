@@ -1,1 +1,1 @@
-web: GoGliderz
+web: GoGliderz2
