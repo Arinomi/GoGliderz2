@@ -40,7 +40,7 @@ func handlerTrack(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		tracks := db.GetAll()
 		var trackIDs []string
 		for _, element := range tracks {
-			trackIDs = append(trackIDs, element.TrackId)
+			trackIDs = append(trackIDs, element.TrackID)
 		}
 
 		jsresp, err := json.Marshal(trackIDs)

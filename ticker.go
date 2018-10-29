@@ -4,14 +4,14 @@ import (
 	"time"
 )
 
-// contains the relevant timestamps, used in this file
+// Timestamps contains the relevant timestamps
 type Timestamps struct {
 	latest      time.Time
 	oldest      time.Time
 	oldestNewer time.Time
 }
 
-// this is returned to the handlers
+// Ticker is returned to the handlers
 type Ticker struct {
 	Latest       time.Time     `json:"t_latest"`
 	Start        time.Time     `json:"t_start"`
@@ -99,7 +99,7 @@ func returnTicker() (Ticker, bool) {
 
 		for i, element := range tracks {
 			if i <= max {
-				ticker.TrackIDs = append(ticker.TrackIDs, element.TrackId)
+				ticker.TrackIDs = append(ticker.TrackIDs, element.TrackID)
 				timestamps = append(timestamps, element.Timestamp)
 			}
 		}
@@ -109,11 +109,10 @@ func returnTicker() (Ticker, bool) {
 		ticker.Latest = tracks[len(tracks)-1].Timestamp
 		ticker.Responsetime = time.Since(procStart)
 
-		return ticker, ok
 	} else {
 		ok = false
-		return ticker, ok
 	}
+	return ticker, ok
 }
 
 // Returns a Ticker, but made for /api/ticker/<timestamp>
@@ -142,21 +141,20 @@ func returnTickerTimestamp(input time.Time) (Ticker, bool) {
 				// Because ticker.TrackIDs does not have any indices yet, thus not even a 0 index!
 				// I spent TWO HOURS wondering why my program had a hissy fit over this
 				// It was obvious, yet my mouse brain managed to oversee that
-				ticker.TrackIDs = append(ticker.TrackIDs, element.TrackId)
+				ticker.TrackIDs = append(ticker.TrackIDs, element.TrackID)
 			}
 
 			if element.Timestamp.After(ticker.Start) && len(tsArr) <= max {
 				tsArr = append(tsArr, element.Timestamp)
-				ticker.TrackIDs = append(ticker.TrackIDs, element.TrackId)
+				ticker.TrackIDs = append(ticker.TrackIDs, element.TrackID)
 			}
 		}
 
 		ticker.Stop = tsArr[len(tsArr)-1]
 		ticker.Responsetime = time.Since(procStart)
 
-		return ticker, ok
 	} else {
 		ok = false
-		return ticker, ok
 	}
+	return ticker, ok
 }

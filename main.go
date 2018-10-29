@@ -16,21 +16,24 @@ var startTime = time.Now().Truncate(time.Second) // starting time
 var db = tracksMongoDB{"mongodb://user:password123@ds141783.mlab.com:41783/tracks", "tracks", "tracks"}
 
 // struct init
+
+// apiInfo is written to http.ResponseWriter
 type apiInfo struct {
 	Uptime  string `json:"uptime"`
 	Info    string `json:"info"`
 	Version string `json:"version"`
 }
 
+// Track is written to http.ResponseWriter
 type Track struct {
 	Timestamp time.Time `bson:"timestamp"`
-	TrackId   string    `bson:"track_id"`
+	TrackID   string    `bson:"track_id"`
 	Date      time.Time `bson:"H_date"`
 	Pilot     string    `bson:"pilot"`
 	Glider    string    `bson:"glider"`
 	GliderID  string    `bson:"glider_id"`
 	Distance  float64   `bson:"track_length"`
-	SrcUrl    string    `bson:"track_src_url"`
+	SrcURL    string    `bson:"track_src_url"`
 }
 
 // returning uptime as a string in ISO 8601/RFC3339 format
