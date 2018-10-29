@@ -6,16 +6,14 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
-// StudentsMongoDB stores the details of the DB connection.
+// stores the details of the DB connection.
 type tracksMongoDB struct {
 	DatabaseURL          string
 	DatabaseName         string
 	TracksCollectionName string
 }
 
-/*
-Init initializes the mongo storage.
-*/
+// Initializes the connection
 func (db *tracksMongoDB) Init() {
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {
@@ -37,9 +35,7 @@ func (db *tracksMongoDB) Init() {
 	}
 }
 
-/*
-Add adds new students to the storage.
-*/
+// add new track to the database
 func (db *tracksMongoDB) Add(t Track) error {
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {
@@ -56,9 +52,7 @@ func (db *tracksMongoDB) Add(t Track) error {
 	return nil
 }
 
-/*
-Count returns the current count of the students in in-memory storage.
-*/
+// return number of tracks in the database
 func (db *tracksMongoDB) Count() int {
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {
@@ -75,9 +69,7 @@ func (db *tracksMongoDB) Count() int {
 	return count
 }
 
-/*
-Get returns a student with a given ID or empty student struct.
-*/
+// return a single track and a bool, requires an ID and a bson.M query to select which fields to return
 func (db *tracksMongoDB) GetSelect(keyID string, fields bson.M) (map[string]interface{}, bool) {
 	session, err := mgo.Dial(db.DatabaseURL)
 	collection := session.DB(db.DatabaseName).C(db.TracksCollectionName)
@@ -98,6 +90,7 @@ func (db *tracksMongoDB) GetSelect(keyID string, fields bson.M) (map[string]inte
 	return result, ok
 }
 
+// return a single track and a bool, requires a bson.M query to choose which fields to search by
 func (db *tracksMongoDB) Get(query bson.M) (Track, bool) {
 	session, err := mgo.Dial(db.DatabaseURL)
 	collection := session.DB(db.DatabaseName).C(db.TracksCollectionName)
@@ -118,9 +111,7 @@ func (db *tracksMongoDB) Get(query bson.M) (Track, bool) {
 	return result, ok
 }
 
-/*
-GetAll returns a slice with all the students.
-*/
+// returns a slice with all the tracks
 func (db *tracksMongoDB) GetAll() []Track {
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {
@@ -142,6 +133,7 @@ func (db *tracksMongoDB) GetAll() []Track {
 	return all
 }
 
+// returns a slice with all the tracks, sorted by the field given
 func (db *tracksMongoDB) GetAllSorted(field string) []Track {
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {

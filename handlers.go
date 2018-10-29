@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// redirection handler for paragliding/ to paragliding/api
 func handlerRedir(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	newPath := r.URL.Path + "/api"
 	http.Redirect(w, r, newPath, http.StatusPermanentRedirect)
@@ -137,6 +138,7 @@ func handlerTrackField(w http.ResponseWriter, _ *http.Request, ps httprouter.Par
 	}
 }
 
+// handler for paragliding/api/ticker
 func handlerTicker(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	http.Header.Add(w.Header(), "content-type", "application/json")
 
@@ -152,6 +154,7 @@ func handlerTicker(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) 
 	}
 }
 
+// handler for paragliding/api/ticker/<timestamp> and /latest
 func handlerTickerTimestamps(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
 	http.Header.Add(w.Header(), "content-type", "application/json")
 	input := ps[0].Value
@@ -174,13 +177,13 @@ func handlerTickerTimestamps(w http.ResponseWriter, _ *http.Request, ps httprout
 			}
 		}
 	} else {
-		time, err := time.Parse(time.RFC3339, input) // Check if the timestamp provided is a valid time
+		timeInput, err := time.Parse(time.RFC3339, input) // Check if the timestamp provided is a valid time
 		if err != nil {
 			http.Error(w, "Invalid time format, use DD.MM.YYYY HH:MM:SS", http.StatusBadRequest)
 			return
 		}
 
-		ticker, ok := returnTickerTimestamp(time)
+		ticker, ok := returnTickerTimestamp(timeInput)
 		if !ok {
 			http.Error(w, "No tracks found", http.StatusNotFound)
 		} else {

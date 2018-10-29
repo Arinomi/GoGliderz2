@@ -4,12 +4,14 @@ import (
 	"time"
 )
 
+// contains the relevant timestamps, used in this file
 type Timestamps struct {
 	latest      time.Time
 	oldest      time.Time
 	oldestNewer time.Time
 }
 
+// this is returned to the handlers
 type Ticker struct {
 	Latest       time.Time     `json:"t_latest"`
 	Start        time.Time     `json:"t_start"`
@@ -18,6 +20,7 @@ type Ticker struct {
 	Responsetime time.Duration `json:"responsetime"`
 }
 
+// returns a Timestamps struct
 func returnTimestamps(ts time.Time) Timestamps {
 	tracks := db.GetAll()
 
@@ -29,13 +32,10 @@ func returnTimestamps(ts time.Time) Timestamps {
 		timestamps.oldestNewer = returnOldestNewer(ts, tracks)
 	}
 
-	if timestamps.oldestNewer.IsZero() {
-		return Timestamps{}
-	}
-
 	return timestamps
 }
 
+// I like descriptive function names.
 func returnLatest(tracks []Track) time.Time {
 	var latest time.Time
 
@@ -48,6 +48,7 @@ func returnLatest(tracks []Track) time.Time {
 	return latest
 }
 
+// Still descriptive
 func returnOldest(tracks []Track) time.Time {
 	var oldest time.Time
 
@@ -64,6 +65,7 @@ func returnOldest(tracks []Track) time.Time {
 	return oldest
 }
 
+// Keep on being descriptive
 func returnOldestNewer(input time.Time, tracks []Track) time.Time {
 	ts := time.Now()
 	now := ts
@@ -81,6 +83,7 @@ func returnOldestNewer(input time.Time, tracks []Track) time.Time {
 	return ts
 }
 
+// Yup. Descriptive. Returns a ticker for api/ticker
 func returnTicker() (Ticker, bool) {
 	// return the latest timestamp
 	// return "start", this is the very first timestamp of them all
@@ -92,10 +95,10 @@ func returnTicker() (Ticker, bool) {
 	if len(tracks) > 0 {
 		procStart := time.Now()
 		var timestamps []time.Time
-		cap := 5 // TODO: Make the cap a config value
+		max := 5 // TODO: Make the cap a config value
 
 		for i, element := range tracks {
-			if i <= cap {
+			if i <= max {
 				ticker.TrackIDs = append(ticker.TrackIDs, element.TrackId)
 				timestamps = append(timestamps, element.Timestamp)
 			}
@@ -113,6 +116,7 @@ func returnTicker() (Ticker, bool) {
 	}
 }
 
+// Returns a Ticker, but made for /api/ticker/<timestamp>
 func returnTickerTimestamp(input time.Time) (Ticker, bool) {
 	tracks := db.GetAllSorted("timestamp")
 	var ticker Ticker
@@ -120,7 +124,7 @@ func returnTickerTimestamp(input time.Time) (Ticker, bool) {
 	if len(tracks) > 0 {
 		procStart := time.Now()
 		timestamps := returnTimestamps(input)
-		cap := 5
+		max := 5
 		var tsArr []time.Time // timestamp arrays, all timestamps after the start
 
 		ticker.Latest = timestamps.latest
@@ -133,10 +137,15 @@ func returnTickerTimestamp(input time.Time) (Ticker, bool) {
 
 		for _, element := range tracks {
 			if element.Timestamp.Equal(ticker.Start) {
+				// Putting the first ID in there.
+				// Also, doing ticker.TrackIDs[0] = element.TrackId DOES NOT WORK!
+				// Because ticker.TrackIDs does not have any indices yet, thus not even a 0 index!
+				// I spent TWO HOURS wondering why my program had a hissy fit over this
+				// It was obvious, yet my mouse brain managed to oversee that
 				ticker.TrackIDs = append(ticker.TrackIDs, element.TrackId)
 			}
 
-			if element.Timestamp.After(ticker.Start) && len(tsArr) <= cap {
+			if element.Timestamp.After(ticker.Start) && len(tsArr) <= max {
 				tsArr = append(tsArr, element.Timestamp)
 				ticker.TrackIDs = append(ticker.TrackIDs, element.TrackId)
 			}
